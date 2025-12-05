@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Painel Operacional – ZYX Logística</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="header">
+    <h1>ZYX Logística – Painel Operacional</h1>
+    <p class="subtitle">
+      Visão simples das operações para apoiar eficiência, rastreabilidade e controle.
+    </p>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2>Filtrar Operações</h2>
+      <div class="filters">
+        <select id="statusFilter">
+          <option value="">Todos os status</option>
+          <option value="Pendente coleta">Pendente coleta</option>
+          <option value="Em trânsito">Em trânsito</option>
+          <option value="Entregue">Entregue</option>
+        </select>
+        <button id="btnFilter">Aplicar filtro</button>
+        <button id="btnClear">Limpar</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Operações</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Cliente</th>
+            <th>Origem</th>
+            <th>Destino</th>
+            <th>Status</th>
+            <th>Última atualização</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="operationsTableBody">
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>Nova Operação</h2>
+      <form id="newOperationForm">
+        <div class="form-group">
+          <label>Cliente*</label>
+          <input type="text" id="client" required />
+        </div>
+        <div class="form-group">
+          <label>Origem*</label>
+          <input type="text" id="origin" required />
+        </div>
+        <div class="form-group">
+          <label>Destino*</label>
+          <input type="text" id="destination" required />
+        </div>
+        <div class="form-group">
+          <label>Código (opcional)</label>
+          <input type="text" id="code" />
+        </div>
+        <div class="form-group">
+          <label>Status inicial</label>
+          <select id="status">
+            <option value="Pendente coleta">Pendente coleta</option>
+            <option value="Em trânsito">Em trânsito</option>
+            <option value="Entregue">Entregue</option>
+          </select>
+        </div>
+        <button type="submit">Cadastrar operação</button>
+      </form>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <small>Teste técnico – Analista de Sistemas Operacionais JR</small>
+  </footer>
+
+  <script>
+    const API_BASE = "/api/operations";
+
+    async function loadOperations(status) {
+      const url = status ? `${API_BASE}?status=${encodeURIComponent(status)}` : API_BASE;
+      const res = await fetch(url);
+      const operations = await res.json();
+      renderOperations(operations);
+    }
+
+    function renderOperations(operations) {
+      const tbody = document.getElementById("operationsTableBody");
+      tbody.innerHTML = "";
+
+      if (!operations.length) {
+        tbody.innerHTML = `<tr><td colspan="7">Nenhuma operação encontrada.</td></tr>`;
+        return;
+      }
+
+      operations.forEach(op => {
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+          <td>${op.code}</td>
+          <td>${op.client}</td>
+          <td>${op.origin}</td>
+          <td>${op.destination}</td>
+          <td>${op.status}</td>
+          <td>${new Date(op.lastUpdate).toLocaleString("pt-BR")}</td>
+          <td>
+            <select data-id="${op.id}" class="statusSelect">
+              <option value="">Alterar status</option>
+              <option value="Pendente coleta">Pendente coleta</option>
+              <option value="Em trânsito">Em trânsito</option>
+              <option value="Entregue">Entregue</option>
+            </select>
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+
+      document.querySelectorAll(".statusSelect").forEach(select => {
+        select.addEventListener("change", async (event) => {
+          const id = event.target.getAttribute("data-id");
+          const newStatus = event.target.value;
+
+          if (!newStatus) return;
+
+          await fetch(`${API_BASE}/${id}/status`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: newStatus })
+          });
+
+          loadOperations(document.getElementById("statusFilter").value);
+        });
+      });
+    }
+
+    document.getElementById("btnFilter").addEventListener("click", () => {
+      const status = document.getElementById("statusFilter").value;
+      loadOperations(status);
+    });
+
+    document.getElementById("btnClear").addEventListener("click", () => {
+      document.getElementById("statusFilter").value = "";
+      loadOperations();
+    });
+
+    document.getElementById("newOperationForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const client = document.getElementById("client").value.trim();
+      const origin = document.getElementById("origin").value.trim();
+      const destination = document.getElementById("destination").value.trim();
+      const code = document.getElementById("code").value.trim();
+      const status = document.getElementById("status").value;
+
+      if (!client || !origin || !destination) {
+        alert("Preencha os campos obrigatórios.");
+        return;
+      }
+
+      await fetch(API_BASE, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ client, origin, destination, code, status })
+      });
+
+      // Limpa formulário
+      event.target.reset();
+      document.getElementById("status").value = "Pendente coleta";
+
+      // Recarrega lista
+      loadOperations(document.getElementById("statusFilter").value);
+    });
+
+    // Carregamento inicial
+    loadOperations();
+  </script>
+</body>
+</html>
