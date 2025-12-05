@@ -5,6 +5,12 @@ Este projeto foi desenvolvido como solução para o desafio técnico da DHL Supp
 
 A aplicação simula um Painel Operacional, permitindo visualizar, cadastrar e atualizar operações logísticas, representando um fluxo básico de controle dentro de um ambiente de warehouse ou transporte.
 
+Como iniciar?
+
+- npm install
+- npm start (Inicia o projeto)
+- Abra seu navegador na url: http://localhost:3000
+
 ---
 
 ## Tecnologias Utilizadas

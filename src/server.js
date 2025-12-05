@@ -1,4 +1,4 @@
-
+// src/server.js
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -8,19 +8,19 @@ const repo = require("./operationsRepository");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middlewares básicos(Cors e Express)
+// Middlewares básicos
 app.use(cors());
 app.use(express.json());
 
-// Servir frontend estático
+// Servir arquivos estáticos do frontend (index.html, styles.css, etc.)
 app.use(express.static(path.join(__dirname, "..", "public")));
 
-// Saúde da aplicação (útil em ambiente real)
+// Endpoint de saúde (opcional, só pra teste)
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// Listar operações (com filtro opcional por status: ?status=Entregue)
+// Listar operações (com filtro opcional por status: ?status=Em%20trânsito)
 app.get("/api/operations", (req, res) => {
   const { status } = req.query;
   const result = repo.filterByStatus(status);
@@ -59,7 +59,7 @@ app.patch("/api/operations/:id/status", (req, res) => {
   res.json(updated);
 });
 
-// Inicia o servidor
+// Sobe o servidor
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });

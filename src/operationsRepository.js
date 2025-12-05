@@ -1,5 +1,5 @@
+// src/operationsRepository.js
 
-// Simula uma base de dados em memória
 let operations = [
   {
     id: 1,
